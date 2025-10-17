@@ -1,5 +1,7 @@
+import LogoutButton from "@/components/LogoutButton";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 interface User {
   id: string;
@@ -16,13 +18,18 @@ export default async function Home() {
     headers: await headers(),
   });
 
+  if (!session) {
+    redirect("/sign-in");
+  }
+
   const user: User | undefined | null = session?.user;
 
   console.log(user);
 
   return (
     <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <h1>{user?.email}</h1>
+      <h1 className="text-7xl">Hello {user?.name}</h1>
+      <LogoutButton />
     </div>
   );
 }

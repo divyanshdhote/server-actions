@@ -1,33 +1,75 @@
 "use server";
 import { auth } from "@/lib/auth";
+import { signinSchema } from "@/schemas/signin.schema";
+import { signupSchema } from "@/schemas/signup.schema";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import * as z from "zod";
 
-export const signUp = async (formData: FormData) => {
-  const email = formData.get("email") as string;
-  const name = formData.get("name") as string;
-  const password = formData.get("password") as string;
+export const signUp = async (data: z.infer<typeof signupSchema>) => {
+  try {
+    const result = signupSchema.safeParse(data);
 
-  await auth.api.signUpEmail({
-    body: {
-      email,
-      name,
-      password,
-    },
-  });
+    if (!result.success) {
+      return {
+        status: "error",
+        message: result.error,
+      };
+    }
 
+    const sanitizedData = {
+      name: data.name.trim(),
+      email: data.email.trim().toLowerCase(),
+      password: data.password,
+      username: data.username.trim().toLowerCase(),
+    };
+
+    const user = await auth.api.signUpEmail({
+      body: sanitizedData,
+    });
+
+    if (!user) {
+      return {
+        status: "error",
+        message: "Failed to create user account. Please try again.",
+      };
+    }
+  } catch (error: any) {
+    console.error("SignUp error:", error);
+
+    return {
+      status: "error",
+      message: error.message,
+    };
+  }
   redirect("/");
 };
-export const signIn = async (formData: FormData) => {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
 
-  await auth.api.signInEmail({
-    body: {
-      email,
-      password,
-    },
-  });
+export const signIn = async (data: z.infer<typeof signinSchema>) => {
+  try {
+    const result = signinSchema.safeParse(data);
+
+    if (!result.success) {
+      return {
+        status: "error",
+        message: result.error,
+      };
+    }
+
+    await auth.api.signInEmail({
+      body: {
+        email: data.email.trim().toLowerCase(),
+        password: data.password,
+      },
+    });
+  } catch (error: any) {
+    console.error("SignIn error:", error);
+
+    return {
+      status: "error",
+      message: error.message,
+    };
+  }
 
   redirect("/");
 };
@@ -37,5 +79,5 @@ export const signOut = async () => {
     headers: await headers(),
   });
 
-  redirect("/");
+  redirect("/sign-in");
 };

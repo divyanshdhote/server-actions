@@ -8,8 +8,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
-import { signIn } from "@/actions/auth";
+import { signUp } from "@/actions/auth";
 import { authClient } from "@/lib/auth-client";
+import { signupSchema } from "@/schemas/signup.schema";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -28,9 +29,8 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
-import { signinSchema } from "@/schemas/signin.schema";
 
-function SignInPage() {
+function SignUpPage() {
   const router = useRouter();
   const { data: session, isPending: isSessionPending } =
     authClient.useSession();
@@ -40,9 +40,11 @@ function SignInPage() {
     }
   }, [session, router]);
 
-  const form = useForm<z.infer<typeof signinSchema>>({
-    resolver: zodResolver(signinSchema),
+  const form = useForm<z.infer<typeof signupSchema>>({
+    resolver: zodResolver(signupSchema),
     defaultValues: {
+      name: "",
+      username: "",
       email: "",
       password: "",
     },
@@ -50,17 +52,17 @@ function SignInPage() {
 
   const [isPending, setIsPending] = useState(false);
 
-  const onsubmit = async (formData: z.infer<typeof signinSchema>) => {
+  const onsubmit = async (formData: z.infer<typeof signupSchema>) => {
     setIsPending(true);
     try {
-      const result = await signIn(formData);
+      const result = await signUp(formData);
 
       if (result?.status === "error") {
         toast.error(result?.message);
       }
     } catch (error: any) {
       if (error.digest?.startsWith("NEXT_REDIRECT")) {
-        toast.success("Sign in successful Redirecting...");
+        toast.success("Account created successfully! Redirecting...");
         form.reset();
       } else {
         toast.error("An unexpected error occurred. Please try again.");
@@ -83,12 +85,36 @@ function SignInPage() {
     <div className="w-full h-screen flex justify-center items-center">
       <Card className="w-full sm:max-w-md">
         <CardHeader>
-          <CardTitle>Sign in to your account</CardTitle>
+          <CardTitle>Sign up to continue</CardTitle>
         </CardHeader>
         <CardContent>
-          <form id="signin-form" onSubmit={form.handleSubmit(onsubmit)}>
+          <form id="signup-form" onSubmit={form.handleSubmit(onsubmit)}>
             <FieldSet>
               <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor="name">Name</FieldLabel>
+
+                  <Input
+                    id="name"
+                    placeholder="name"
+                    {...form.register("name")}
+                    aria-invalid={!!form.formState.errors.name}
+                  />
+                  <FieldError errors={[form.formState.errors.name]} />
+                </Field>
+
+                <Field>
+                  <FieldLabel htmlFor="username">Username</FieldLabel>
+
+                  <Input
+                    id="username"
+                    placeholder="username"
+                    {...form.register("username")}
+                    aria-invalid={!!form.formState.errors.username}
+                  />
+                  <FieldError errors={[form.formState.errors.username]} />
+                </Field>
+
                 <Field>
                   <FieldLabel htmlFor="email">Email</FieldLabel>
 
@@ -135,7 +161,7 @@ function SignInPage() {
         <CardFooter className="flex flex-col gap-4">
           <Button
             type="submit"
-            form="signin-form"
+            form="signup-form"
             disabled={isPending}
             className="w-full"
             aria-describedby={isPending ? "submitting-text" : undefined}
@@ -143,19 +169,19 @@ function SignInPage() {
             {isPending ? (
               <>
                 <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
-                Signing in...
+                Creating account...
               </>
             ) : (
-              "Sign in"
+              "Create Account"
             )}
           </Button>
           <p className="text-sm text-muted-foreground">
-            New here?{"  "}
+            Already have an account?{"  "}
             <Link
-              href="/sign-up"
+              href="/sign-in"
               className="text-primary underline-offset-4 hover:underline"
             >
-              Sign-up
+              Sign-in
             </Link>
           </p>
         </CardFooter>
@@ -164,4 +190,4 @@ function SignInPage() {
   );
 }
 
-export default SignInPage;
+export default SignUpPage;
