@@ -7,7 +7,7 @@ import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
-
+import { FcGoogle } from "react-icons/fc";
 import { signIn } from "@/actions/auth";
 import { authClient } from "@/lib/auth-client";
 
@@ -34,11 +34,9 @@ function SignInPage() {
   const router = useRouter();
   const { data: session, isPending: isSessionPending } =
     authClient.useSession();
-  useEffect(() => {
-    if (session) {
-      router.push("/");
-    }
-  }, [session, router]);
+  const [isGoogleSignUpPending, setIsGoogleSignUpPending] = useState(false);
+  const [isPending, setIsPending] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<z.infer<typeof signinSchema>>({
     resolver: zodResolver(signinSchema),
@@ -48,7 +46,28 @@ function SignInPage() {
     },
   });
 
-  const [isPending, setIsPending] = useState(false);
+
+  useEffect(() => {
+    if (session) {
+      router.push("/");
+    }
+  }, [session, router]);
+
+  if (isSessionPending || session) {
+    return (
+      <div className="w-full h-screen flex justify-center items-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-background border-t-primary" />
+      </div>
+    );
+  }
+
+  const signUpWithGoogle = async () => {
+    setIsGoogleSignUpPending(true);
+    await authClient.signIn.social({
+      provider: "google",
+      callbackURL: "/",
+    });
+  };
 
   const onsubmit = async (formData: z.infer<typeof signinSchema>) => {
     setIsPending(true);
@@ -70,15 +89,8 @@ function SignInPage() {
     }
   };
 
-  const [showPassword, setShowPassword] = useState(false);
 
-  if (isSessionPending || session) {
-    return (
-      <div className="w-full h-screen flex justify-center items-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-background border-t-primary" />
-      </div>
-    );
-  }
+
   return (
     <div className="w-full h-screen flex justify-center items-center">
       <Card className="w-full sm:max-w-md">
@@ -136,7 +148,7 @@ function SignInPage() {
           <Button
             type="submit"
             form="signin-form"
-            disabled={isPending}
+            disabled={isPending || isGoogleSignUpPending}
             className="w-full"
             aria-describedby={isPending ? "submitting-text" : undefined}
           >
@@ -147,6 +159,24 @@ function SignInPage() {
               </>
             ) : (
               "Sign in"
+            )}
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={signUpWithGoogle}
+            disabled={isPending || isGoogleSignUpPending}
+          >
+            {isGoogleSignUpPending ? (
+              <>
+                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                Redirecting to Google...
+              </>
+            ) : (
+              <>
+                <FcGoogle className="mr-2" size={20} />
+                Sign up with Google
+              </>
             )}
           </Button>
           <p className="text-sm text-muted-foreground">

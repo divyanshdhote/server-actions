@@ -8,9 +8,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
-import { signUp } from "@/actions/auth";
+import { signUp, usernameCheck } from "@/actions/auth";
 import { authClient } from "@/lib/auth-client";
 import { signupSchema } from "@/schemas/signup.schema";
+import { FcGoogle } from "react-icons/fc";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -34,14 +35,18 @@ function SignUpPage() {
   const router = useRouter();
   const { data: session, isPending: isSessionPending } =
     authClient.useSession();
-  useEffect(() => {
-    if (session) {
-      router.push("/");
-    }
-  }, [session, router]);
+
+  const [isPending, setIsPending] = useState(false);
+  const [isUsernameAvailable, setIsUsernameAvailable] = useState<
+    boolean | null
+  >(null);
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isGoogleSignUpPending, setIsGoogleSignUpPending] = useState(false);
 
   const form = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
+    mode: "onChange",
     defaultValues: {
       name: "",
       username: "",
@@ -50,7 +55,32 @@ function SignUpPage() {
     },
   });
 
-  const [isPending, setIsPending] = useState(false);
+  const username = form.watch("username");
+
+  useEffect(() => {
+    if (session) {
+      router.push("/");
+    }
+  }, [session, router]);
+
+  useEffect(() => {
+    if (form.formState.errors.username || !username) {
+      setIsUsernameAvailable(null);
+      return;
+    }
+    const debounce = setTimeout(() => {
+      setIsCheckingUsername(true);
+      usernameCheck(username).then((res) => {
+        setIsUsernameAvailable(res.isAvailable);
+        setIsCheckingUsername(false);
+      });
+    }, 500);
+
+    return () => {
+      clearTimeout(debounce);
+      setIsCheckingUsername(false);
+    };
+  }, [username, form.formState.errors.username]);
 
   const onsubmit = async (formData: z.infer<typeof signupSchema>) => {
     setIsPending(true);
@@ -72,7 +102,13 @@ function SignUpPage() {
     }
   };
 
-  const [showPassword, setShowPassword] = useState(false);
+  const signUpWithGoogle = async () => {
+    setIsGoogleSignUpPending(true);
+    await authClient.signIn.social({
+      provider: "google",
+      callbackURL: "/",
+    });
+  };
 
   if (isSessionPending || session) {
     return (
@@ -81,6 +117,7 @@ function SignUpPage() {
       </div>
     );
   }
+
   return (
     <div className="w-full h-screen flex justify-center items-center">
       <Card className="w-full sm:max-w-md">
@@ -112,6 +149,27 @@ function SignUpPage() {
                     {...form.register("username")}
                     aria-invalid={!!form.formState.errors.username}
                   />
+                  {!form.formState.errors.username && (
+                    <>
+                      {isCheckingUsername && (
+                        <p className="text-sm text-muted-foreground">
+                          Checking availability...
+                        </p>
+                      )}
+
+                      {!isCheckingUsername && isUsernameAvailable === true && (
+                        <p className="text-sm text-green-500">
+                          Username is available
+                        </p>
+                      )}
+
+                      {!isCheckingUsername && isUsernameAvailable === false && (
+                        <p className="text-sm text-red-500">
+                          Username is taken
+                        </p>
+                      )}
+                    </>
+                  )}
                   <FieldError errors={[form.formState.errors.username]} />
                 </Field>
 
@@ -162,7 +220,11 @@ function SignUpPage() {
           <Button
             type="submit"
             form="signup-form"
-            disabled={isPending}
+            disabled={
+              isPending ||
+              isUsernameAvailable === false ||
+              isGoogleSignUpPending
+            }
             className="w-full"
             aria-describedby={isPending ? "submitting-text" : undefined}
           >
@@ -175,6 +237,25 @@ function SignUpPage() {
               "Create Account"
             )}
           </Button>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={signUpWithGoogle}
+            disabled={isPending || isGoogleSignUpPending}
+          >
+            {isGoogleSignUpPending ? (
+              <>
+                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                Redirecting to Google...
+              </>
+            ) : (
+              <>
+                <FcGoogle className="mr-2" size={20} />
+                Sign up with Google
+              </>
+            )}
+          </Button>
+
           <p className="text-sm text-muted-foreground">
             Already have an account?{"  "}
             <Link

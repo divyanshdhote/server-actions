@@ -5,6 +5,10 @@ import { signupSchema } from "@/schemas/signup.schema";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import * as z from "zod";
+import { PrismaClient } from "@/generated/prisma";
+import { authClient } from "@/lib/auth-client";
+
+const prisma = new PrismaClient();
 
 export const signUp = async (data: z.infer<typeof signupSchema>) => {
   try {
@@ -80,4 +84,16 @@ export const signOut = async () => {
   });
 
   redirect("/sign-in");
+};
+
+export const usernameCheck = async (username: string) => {
+  const user = await prisma.user.findUnique({
+    where: {
+      username,
+    },
+  });
+
+  return {
+    isAvailable: !user,
+  };
 };

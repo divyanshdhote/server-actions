@@ -2,6 +2,7 @@ import LogoutButton from "@/components/LogoutButton";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import SessionMonitor from "@/components/SessionMonitor";
 
 interface User {
   id: string;
@@ -28,6 +29,7 @@ export default async function Home() {
 
   return (
     <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
+      <SessionMonitor />
       <h1 className="text-7xl">Hello {user?.name}</h1>
       <LogoutButton />
     </div>

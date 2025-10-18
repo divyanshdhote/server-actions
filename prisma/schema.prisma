@@ -17,8 +17,8 @@ datasource db {
 model User {
   id              String    @id
   name            String
-  displayUsername String
-  username        String
+  displayUsername String @unique
+  username        String @unique
   email           String
   emailVerified   Boolean   @default(false)
   image           String?
