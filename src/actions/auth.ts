@@ -6,7 +6,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import * as z from "zod";
 import { PrismaClient } from "@/generated/prisma";
-import { authClient } from "@/lib/auth-client";
+
 
 const prisma = new PrismaClient();
 
@@ -51,6 +51,10 @@ export const signUp = async (data: z.infer<typeof signupSchema>) => {
 
 export const signIn = async (data: z.infer<typeof signinSchema>) => {
   try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (session?.user) {
+      redirect("/");
+    }
     const result = signinSchema.safeParse(data);
 
     if (!result.success) {

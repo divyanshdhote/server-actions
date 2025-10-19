@@ -46,7 +46,6 @@ function SignInPage() {
     },
   });
 
-
   useEffect(() => {
     if (session) {
       router.push("/");
@@ -88,8 +87,6 @@ function SignInPage() {
       setIsPending(false);
     }
   };
-
-
 
   return (
     <div className="w-full h-screen flex justify-center items-center">
