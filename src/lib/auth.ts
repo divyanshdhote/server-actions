@@ -17,7 +17,7 @@ export const auth = betterAuth({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
       mapProfileToUser: async (profile) => {
-        let baseUsername =
+        const baseUsername =
           profile.email?.split("@")[0] ?? profile.name ?? "user";
         let username = baseUsername;
         let i = 1;

@@ -7,17 +7,23 @@ import { redirect } from "next/navigation";
 import * as z from "zod";
 import { PrismaClient } from "@/generated/prisma";
 
-
 const prisma = new PrismaClient();
 
-export const signUp = async (data: z.infer<typeof signupSchema>) => {
+type returnType = {
+  status: string;
+  message: string;
+};
+
+export const signUp = async (
+  data: z.infer<typeof signupSchema>
+): Promise<returnType> => {
   try {
     const result = signupSchema.safeParse(data);
 
     if (!result.success) {
       return {
         status: "error",
-        message: result.error,
+        message: result.error.message,
       };
     }
 
@@ -43,13 +49,16 @@ export const signUp = async (data: z.infer<typeof signupSchema>) => {
 
     return {
       status: "error",
-      message: error instanceof Error ? error.message : "An unexpected error occurred",
+      message:
+        error instanceof Error ? error.message : "An unexpected error occurred",
     };
   }
   redirect("/");
 };
 
-export const signIn = async (data: z.infer<typeof signinSchema>) => {
+export const signIn = async (
+  data: z.infer<typeof signinSchema>
+): Promise<returnType> => {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
     if (session?.user) {
@@ -60,7 +69,7 @@ export const signIn = async (data: z.infer<typeof signinSchema>) => {
     if (!result.success) {
       return {
         status: "error",
-        message: result.error,
+        message: result.error.message,
       };
     }
 
@@ -75,7 +84,8 @@ export const signIn = async (data: z.infer<typeof signinSchema>) => {
 
     return {
       status: "error",
-      message: error instanceof Error ? error.message : "An unexpected error occurred",
+      message:
+        error instanceof Error ? error.message : "An unexpected error occurred",
     };
   }
 
