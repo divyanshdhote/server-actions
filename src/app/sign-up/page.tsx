@@ -90,8 +90,9 @@ function SignUpPage() {
       if (result?.status === "error") {
         toast.error(result?.message);
       }
-    } catch (error: any) {
-      if (error.digest?.startsWith("NEXT_REDIRECT")) {
+    } catch (error: unknown) {
+      if (error && typeof error === "object" && "digest" in error && 
+          typeof error.digest === "string" && error.digest.startsWith("NEXT_REDIRECT")) {
         toast.success("Account created successfully! Redirecting...");
         form.reset();
       } else {

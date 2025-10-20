@@ -1,18 +1,5 @@
 import LogoutButton from "@/components/LogoutButton";
 import { requireUser } from "@/data/user.dal";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  emailVerified: boolean;
-  image?: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 export default async function Home() {
   const user = await requireUser();

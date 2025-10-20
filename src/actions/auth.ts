@@ -38,12 +38,12 @@ export const signUp = async (data: z.infer<typeof signupSchema>) => {
         message: "Failed to create user account. Please try again.",
       };
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("SignUp error:", error);
 
     return {
       status: "error",
-      message: error.message,
+      message: error instanceof Error ? error.message : "An unexpected error occurred",
     };
   }
   redirect("/");
@@ -70,12 +70,12 @@ export const signIn = async (data: z.infer<typeof signinSchema>) => {
         password: data.password,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("SignIn error:", error);
 
     return {
       status: "error",
-      message: error.message,
+      message: error instanceof Error ? error.message : "An unexpected error occurred",
     };
   }
 
