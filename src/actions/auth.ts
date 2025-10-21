@@ -93,9 +93,17 @@ export const signIn = async (
 };
 
 export const signOut = async () => {
-  await auth.api.signOut({
-    headers: await headers(),
-  });
+  try {
+    await auth.api.signOut({
+      headers: await headers(),
+    });
+  } catch (error) {
+    console.log(error);
+    return {
+      status: "error",
+      message: "An error occured while signing out",
+    };
+  }
 
   redirect("/sign-in");
 };

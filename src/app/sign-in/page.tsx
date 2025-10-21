@@ -36,6 +36,7 @@ function SignInPage() {
     authClient.useSession();
   const [isGoogleSignUpPending, setIsGoogleSignUpPending] = useState(false);
   const [isPending, setIsPending] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<z.infer<typeof signinSchema>>({
@@ -50,7 +51,7 @@ function SignInPage() {
     if (session) {
       router.push("/");
     }
-  }, [session, router]);
+  }, [session, router, isRedirecting]);
 
   if (isSessionPending || session) {
     return (
@@ -77,10 +78,15 @@ function SignInPage() {
         toast.error(result?.message);
       }
     } catch (error: unknown) {
-      if (error && typeof error === "object" && "digest" in error && 
-          typeof error.digest === "string" && error.digest.startsWith("NEXT_REDIRECT")) {
-        toast.success("Sign in successful Redirecting...");
-        form.reset();
+      if (
+        error &&
+        typeof error === "object" &&
+        "digest" in error &&
+        typeof error.digest === "string" &&
+        error.digest.startsWith("NEXT_REDIRECT")
+      ) {
+        setIsRedirecting(true);
+        toast.success("Sign in successful..");
       } else {
         toast.error("An unexpected error occurred. Please try again.");
       }
@@ -118,7 +124,7 @@ function SignInPage() {
                     <Input
                       id="password"
                       type={showPassword ? "text" : "password"}
-                      placeholder="Create a password"
+                      placeholder="Enter your password"
                       {...form.register("password")}
                       aria-invalid={!!form.formState.errors.password}
                     />
@@ -146,11 +152,11 @@ function SignInPage() {
           <Button
             type="submit"
             form="signin-form"
-            disabled={isPending || isGoogleSignUpPending}
+            disabled={isPending || isRedirecting || isGoogleSignUpPending}
             className="w-full"
             aria-describedby={isPending ? "submitting-text" : undefined}
           >
-            {isPending ? (
+            {isPending || isRedirecting || isGoogleSignUpPending ? (
               <>
                 <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
                 Signing in...

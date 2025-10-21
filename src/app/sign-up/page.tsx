@@ -41,6 +41,7 @@ function SignUpPage() {
     boolean | null
   >(null);
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [isRedirecting, setisRedirecting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isGoogleSignUpPending, setIsGoogleSignUpPending] = useState(false);
 
@@ -91,10 +92,15 @@ function SignUpPage() {
         toast.error(result?.message);
       }
     } catch (error: unknown) {
-      if (error && typeof error === "object" && "digest" in error && 
-          typeof error.digest === "string" && error.digest.startsWith("NEXT_REDIRECT")) {
-        toast.success("Account created successfully! Redirecting...");
-        form.reset();
+      if (
+        error &&
+        typeof error === "object" &&
+        "digest" in error &&
+        typeof error.digest === "string" &&
+        error.digest.startsWith("NEXT_REDIRECT")
+      ) {
+        setisRedirecting(true);
+        toast.success("Account created successfully!");
       } else {
         toast.error("An unexpected error occurred. Please try again.");
       }
@@ -224,12 +230,13 @@ function SignUpPage() {
             disabled={
               isPending ||
               isUsernameAvailable === false ||
-              isGoogleSignUpPending
+              isGoogleSignUpPending ||
+              isRedirecting
             }
             className="w-full"
             aria-describedby={isPending ? "submitting-text" : undefined}
           >
-            {isPending ? (
+            {isPending || isRedirecting ? (
               <>
                 <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
                 Creating account...
