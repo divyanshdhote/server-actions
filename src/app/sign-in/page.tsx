@@ -179,7 +179,7 @@ function SignInPage() {
             ) : (
               <>
                 <FcGoogle className="mr-2" size={20} />
-                Sign up with Google
+                Sign in with Google
               </>
             )}
           </Button>
