@@ -189,7 +189,7 @@ function SignInPage() {
               href="/sign-up"
               className="text-primary underline-offset-4 hover:underline"
             >
-              Signnn-uppp
+              Sign-up
             </Link>
           </p>
         </CardFooter>
